@@ -13,6 +13,27 @@
 function handleAccountsCommand(evt) {
   webkit.messageHandlers.accountsCommandHandler.postMessage({ type: evt.type, detail: evt.detail });
 };
+ 
 window.addEventListener("FirefoxAccountsCommand", handleAccountsCommand);
 
+
+ window.addEventListener('WebChannelMessageToChrome', function (e) {
+   var detail = e.detail;
+   var msg = {
+       id: "account_updates",
+       message: {
+         messageId: detail.message.messageId,
+         command: "fxaccounts:fxa_status",
+         data : {}
+       }
+   }
+   debugger
+   window.dispatchEvent(new CustomEvent('WebChannelMessageToContent', {
+       detail: JSON.stringify(msg)
+   }));
+   debugger
+ });
+
+
+ 
 })();

@@ -18,7 +18,7 @@ enum FxALoginFlow {
 }
 
 class RustLoginView: UIViewController, WKNavigationDelegate {
-    private var webView = WKWebView()
+    private var webView: WKWebView
     var dismissType: DismissType = .dismiss
     let fxaLaunchParams: FxALaunchParams
     let loginFlowType: FxALoginFlow
@@ -26,6 +26,25 @@ class RustLoginView: UIViewController, WKNavigationDelegate {
     init(fxaOptions: FxALaunchParams?, flowType: FxALoginFlow) {
         self.fxaLaunchParams = fxaOptions ?? FxALaunchParams(query: [String: String]())
         self.loginFlowType = flowType
+        
+
+        // Handle messages from the content server (via our user script).
+        let contentController = WKUserContentController()
+        //contentController.add(LeakAvoider(delegate: self), name: "accountsCommandHandler")
+
+        // Inject our user script after the page loads.
+        if let path = Bundle.main.path(forResource: "FxASignIn", ofType: "js") {
+            if let source = try? String(contentsOfFile: path, encoding: .utf8) {
+                let userScript = WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+                contentController.addUserScript(userScript)
+            }
+        }
+
+        let config = WKWebViewConfiguration()
+        config.userContentController = contentController
+        
+        webView = WKWebView(frame: .zero, configuration: config)
+        
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -37,6 +56,8 @@ class RustLoginView: UIViewController, WKNavigationDelegate {
         super.viewDidLoad()
         self.webView.navigationDelegate = self
         self.view = self.webView
+        
+
 
         RustFirefoxAccounts.shared.accountManager.beginAuthentication() { [weak self] result in
             if case .success(let url) = result {
@@ -107,7 +128,8 @@ class RustLoginView: UIViewController, WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
 
-        let redirectUrl = RustFirefoxAccounts.shared.redirectURL
+        //let redirectUrl = RustFirefoxAccounts.shared.redirectURL
+        let redirectUrl = "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel"
         if let navigationURL = navigationAction.request.url {
             let expectedRedirectURL = URL(string: redirectUrl)!
             if navigationURL.scheme == expectedRedirectURL.scheme && navigationURL.host == expectedRedirectURL.host && navigationURL.path == expectedRedirectURL.path,

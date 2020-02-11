@@ -3,8 +3,9 @@ import MozillaAppServices
 import SwiftKeychainWrapper
 
 open class RustFirefoxAccounts {
-    private let ClientID =  "98adfa37698f255b" // actual one is "1b1a3e44c54fbb58"
-    public let redirectURL = "https://lockbox.firefox.com/fxa/ios-redirect.html"
+    private let ClientID =  "a2270f727f45f648" // actual one is "1b1a3e44c54fbb58"
+    //public let redirectURL = "https://lockbox.firefox.com/fxa/ios-redirect.html"
+    public let redirectURL = "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel"
     public static var shared = RustFirefoxAccounts()
     public let accountManager: FxaAccountManager
     public var avatar: Avatar? = nil
@@ -23,7 +24,7 @@ open class RustFirefoxAccounts {
     }
 
     private init() {
-        let config = FxAConfig.release(clientId: ClientID, redirectUri: redirectURL)
+        let config = FxAConfig(contentUrl: "http://127.0.0.1:3030", clientId: ClientID, redirectUri: redirectURL)
         let type = UIDevice.current.userInterfaceIdiom == .pad ? DeviceType.tablet : DeviceType.mobile
         let deviceConfig = DeviceConfig(name:  DeviceInfo.defaultClientName(), type: type, capabilities: [.sendTab])
 
